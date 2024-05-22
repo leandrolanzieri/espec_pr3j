@@ -96,11 +96,7 @@ class ClimateChamber:
             f"Current temperature: {current}°C, Target temperature: {target} +-"
             f"{self.temperature_accuracy}°C"
         )
-        return (
-            (target - self.temperature_accuracy)
-            <= current
-            <= (target + self.temperature_accuracy)
-        )
+        return abs(current - target) <= self.temperature_accuracy
 
     def _target_humidity_reached(self) -> bool:
         """
@@ -114,11 +110,7 @@ class ClimateChamber:
             f"Current humidity: {current}%, Target humidity: {target} +-"
             f"{self.humidity_accuracy}%"
         )
-        return (
-            (target - self.humidity_accuracy)
-            <= current
-            <= (target + self.humidity_accuracy)
-        )
+        return abs(current - target) <= self.humidity_accuracy
 
     def get_temperature_status(self) -> TemperatureStatus:
         """
