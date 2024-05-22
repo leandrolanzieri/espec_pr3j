@@ -296,7 +296,7 @@ class ClimateChamber:
         return response
 
     def set_constant_condition(
-        self, temperature: float, humidity: float, stable_time=60
+        self, temperature: float, humidity: float, stable_time=60.0, poll_interval=1.0
     ):
         """
         Sets the climate chamber to a constant temperature and humidity condition and
@@ -307,6 +307,8 @@ class ClimateChamber:
             `humidity`: The humidity to set in percentage.
             `stable_time`: The time in seconds to wait until the setpoints are stable.
                            Default is 60.
+            `poll_interval`: The time in seconds to wait between each check.
+                             Default is 1.
         """
         _LOGGER.debug(f"Setting constant condition {temperature}°C, {humidity}%")
 
@@ -330,7 +332,7 @@ class ClimateChamber:
                 _LOGGER.debug("Setpoints reached and stable")
                 break
 
-            time.sleep(1)
+            time.sleep(poll_interval)
 
     def get_heater_percentage(self) -> HeatersStatus:
         """
