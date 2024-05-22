@@ -1,5 +1,8 @@
 {
     "editor.rulers": [
         88
+    ],
+    "python.analysis.extraPaths": [
+        "./src/climate_chamber"
     ]
 }
