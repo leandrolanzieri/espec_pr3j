@@ -125,3 +125,12 @@ class ClimateChamberMocker(BaseMocker):
     @scpi("MODE?")
     def _get_mode(self) -> str:
         return self._mode
+
+    @scpi("MON?")
+    def _get_monitor(self) -> str:
+        response = f"{self._current_temperature: .1f}"
+        response += f", {self._current_humidity: .1f}"
+        response += f", {self._mode}"
+        response += ", 0"  # number of alarms occurring
+
+        return response

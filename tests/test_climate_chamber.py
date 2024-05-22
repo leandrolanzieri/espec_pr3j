@@ -1,92 +1,85 @@
 from climate_chamber import ClimateChamber, OperationMode
 
+TARGET_TEMPERATURE = 23.0
+LOWER_TEMPERATURE = 20.0
+UPPER_TEMPERATURE = 25.0
 
-def test_temperatures(resource_path, resource_manager):
-    chamber = ClimateChamber(
-        resource_path=resource_path, resource_manager=resource_manager
+TARGET_HUMIDITY = 50.0
+LOWER_HUMIDITY = 40.0
+UPPER_HUMIDITY = 60.0
+
+STABILITY_POLL_INTERVAL = 0.001
+STABILITY_TIME = 0.01
+
+
+def test_temperature_limits(climate_chamber: ClimateChamber):
+    climate_chamber.set_temperature_limits(
+        upper_limit=UPPER_TEMPERATURE, lower_limit=LOWER_TEMPERATURE
     )
 
-    TARGET = 23.2
-    LOWER = 20.0
-    UPPER = 25.0
+    temperature = climate_chamber.get_temperature_status()
 
-    chamber.set_target_temperature(TARGET)
-    chamber.set_temperature_limits(upper_limit=UPPER, lower_limit=LOWER)
-
-    temperature = chamber.get_temperature_status()
-
-    assert temperature.lower_limit == LOWER
-    assert temperature.upper_limit == UPPER
-    assert temperature.target_temperature == TARGET
+    assert temperature.lower_limit == LOWER_TEMPERATURE
+    assert temperature.upper_limit == UPPER_TEMPERATURE
 
 
-def test_humidities(resource_path, resource_manager):
-    chamber = ClimateChamber(
-        resource_path=resource_path, resource_manager=resource_manager
+def test_humidity_limits(climate_chamber: ClimateChamber):
+    climate_chamber.set_humidity_limits(
+        upper_limit=UPPER_HUMIDITY, lower_limit=LOWER_HUMIDITY
     )
 
-    TARGET = 50.0
-    LOWER = 40.0
-    UPPER = 60.0
+    humidity = climate_chamber.get_humidity_status()
 
-    chamber.set_target_humidity(TARGET)
-    chamber.set_humidity_limits(upper_limit=UPPER, lower_limit=LOWER)
-
-    humidity = chamber.get_humidity_status()
-
-    assert humidity.lower_limit == LOWER
-    assert humidity.upper_limit == UPPER
-    assert humidity.target_humidity == TARGET
+    assert humidity.lower_limit == LOWER_HUMIDITY
+    assert humidity.upper_limit == UPPER_HUMIDITY
 
 
-def test_modes(resource_path, resource_manager):
-    chamber = ClimateChamber(
-        resource_path=resource_path, resource_manager=resource_manager
+def test_modes(climate_chamber: ClimateChamber):
+    climate_chamber.set_mode(OperationMode.CONSTANT)
+    assert climate_chamber.get_mode() == OperationMode.CONSTANT
+
+    climate_chamber.set_mode(OperationMode.OFF)
+    assert climate_chamber.get_mode() == OperationMode.OFF
+
+    climate_chamber.set_mode(OperationMode.STANDBY)
+    assert climate_chamber.get_mode() == OperationMode.STANDBY
+
+    climate_chamber.set_mode(OperationMode.RUN)
+    assert climate_chamber.get_mode() == OperationMode.RUN
+
+
+def test_constant_condition(climate_chamber: ClimateChamber):
+    climate_chamber.set_constant_condition(
+        temperature=TARGET_TEMPERATURE,
+        humidity=TARGET_HUMIDITY,
+        stable_time=STABILITY_TIME,
+        poll_interval=STABILITY_POLL_INTERVAL,
     )
 
-    chamber.set_mode(OperationMode.CONSTANT)
-    assert chamber.get_mode() == OperationMode.CONSTANT
+    temperature = climate_chamber.get_temperature_status()
+    humidity = climate_chamber.get_humidity_status()
 
-    chamber.set_mode(OperationMode.OFF)
-    assert chamber.get_mode() == OperationMode.OFF
-
-    chamber.set_mode(OperationMode.STANDBY)
-    assert chamber.get_mode() == OperationMode.STANDBY
-
-    chamber.set_mode(OperationMode.RUN)
-    assert chamber.get_mode() == OperationMode.RUN
-
-
-def test_constant_condition(resource_path, resource_manager):
-    TARGET_TEMP = 23.0
-    ACC_HUMI = 1.0
-    TARGET_HUMI = 50.0
-    ACC_HUMI = 1.0
-    STABLE_TIME = 0.01
-
-    chamber = ClimateChamber(
-        resource_path=resource_path,
-        resource_manager=resource_manager,
-        temperature_accuracy=ACC_HUMI,
-        humidity_accuracy=ACC_HUMI,
-    )
-
-    chamber.set_constant_condition(
-        temperature=TARGET_TEMP,
-        humidity=TARGET_HUMI,
-        stable_time=STABLE_TIME,
-        poll_interval=0.001,
-    )
-
-    temperature = chamber.get_temperature_status()
-    humidity = chamber.get_humidity_status()
-
-    assert temperature.target_temperature == TARGET_TEMP
-    assert humidity.target_humidity == TARGET_HUMI
-
-    assert TARGET_HUMI - ACC_HUMI <= humidity.current_humidity <= TARGET_HUMI + ACC_HUMI
     assert (
-        TARGET_TEMP - ACC_HUMI
-        <= temperature.current_temperature
-        <= TARGET_TEMP + ACC_HUMI
+        abs(temperature.current_temperature - TARGET_TEMPERATURE)
+        < climate_chamber.temperature_accuracy
     )
+    assert (
+        abs(humidity.current_humidity - TARGET_HUMIDITY)
+        < climate_chamber.humidity_accuracy
+    )
+
+
+def test_test_area_state(climate_chamber: ClimateChamber):
+    test_area = climate_chamber.get_test_area_state()
+
+    assert (
+        abs(test_area.current_temperature - TARGET_TEMPERATURE)
+        < climate_chamber.temperature_accuracy
+    )
+
+    assert (
+        abs(test_area.current_humidity - TARGET_HUMIDITY)
+        < climate_chamber.humidity_accuracy
+    )
+
+    assert test_area.operation_state == OperationMode.CONSTANT
