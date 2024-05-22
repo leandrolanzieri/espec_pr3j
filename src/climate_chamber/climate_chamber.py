@@ -25,7 +25,7 @@ class ClimateChamber:
         `ip_address (str | None)`: IP address of the climate chamber. Default is None.
             If None, the resource_path must be provided. Can't be used with
             resource_path.
-        `temperature_accurary (float)`: The accuracy considered when setting the
+        `temperature_accuracy (float)`: The accuracy considered when setting the
             temperature. Default is 0.2.
         `humidity_accuracy (float)`: The accuracy considered when setting the humidity.
             Default is 1.0.
@@ -50,7 +50,7 @@ class ClimateChamber:
     def __init__(
         self,
         ip_address: str | None = None,
-        temperature_accurary=0.2,
+        temperature_accuracy=0.2,
         humidity_accuracy=1.0,
         resource_path: str | None = None,
         resource_manager: pyvisa.ResourceManager = None,
@@ -61,7 +61,7 @@ class ClimateChamber:
         self.ip_address = ip_address
         """The IP address of the climate chamber"""
 
-        self.temperature_accuracy = temperature_accurary
+        self.temperature_accuracy = temperature_accuracy
         """The accuracy considered when setting the temperature"""
 
         self.humidity_accuracy = humidity_accuracy
