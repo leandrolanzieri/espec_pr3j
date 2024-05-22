@@ -122,7 +122,7 @@ class ClimateChamber:
 
         # convert into float numbers
         # data format: [current temp, set temp, upper limit, lower limit]
-        temperature = [float(i) for i in response.split(sep=",")]
+        temperature = [float(i.strip()) for i in response.split(sep=",")]
 
         temperature_status = TemperatureStatus(
             current_temperature=temperature[0],
@@ -142,7 +142,7 @@ class ClimateChamber:
 
         # convert into float numbers
         # data format: [current hum, set hum, upper limit, lower limit]
-        humidity = [float(i) for i in response.split(sep=",")]
+        humidity = [float(i.strip()) for i in response.split(sep=",")]
 
         humidity_status = HumidityStatus(
             current_humidity=humidity[0],
@@ -209,15 +209,15 @@ class ClimateChamber:
         """
         Get the chamber test area state.
         """
-        response = self._chamber.query("MON?", delay=self.MONITOR_COMMAND_DELAY)
+        response: str = self._chamber.query("MON?", delay=self.MONITOR_COMMAND_DELAY)
         state = response.split(sep=",")
 
         # output data format: [temp, humid, op-state, num. of alarms]
         test_area_state = TestAreaState(
-            current_temperature=float(state[0]),
-            current_humidity=float(state[1]),
-            operation_state=OperationMode.from_str(state[2]),
-            number_of_alarms=int(state[3]),
+            current_temperature=float(state[0].strip()),
+            current_humidity=float(state[1].strip()),
+            operation_state=OperationMode.from_str(state[2].strip()),
+            number_of_alarms=int(state[3].strip()),
         )
         return test_area_state
 
@@ -342,7 +342,8 @@ class ClimateChamber:
         response = response.split(sep=",")
 
         heaters = HeatersStatus(
-            temperature_heater=float(response[1]), humidity_heater=float(response[2])
+            temperature_heater=float(response[1].strip()),
+            humidity_heater=float(response[2].strip()),
         )
 
         return heaters
