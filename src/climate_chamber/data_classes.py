@@ -1,8 +1,9 @@
+from dataclasses import dataclass
 from enum import Enum
-from typing import TypedDict
 
 
-class TemperatureStatus(TypedDict):
+@dataclass
+class TemperatureStatus:
     """
     The temperature status of the climate chamber. All values are in Celsius.
     """
@@ -20,7 +21,8 @@ class TemperatureStatus(TypedDict):
     """The lower temperature limit of the climate chamber"""
 
 
-class HumidityStatus(TypedDict):
+@dataclass
+class HumidityStatus:
     """
     The humidity status of the climate chamber. All values are in percentage.
     """
@@ -38,7 +40,8 @@ class HumidityStatus(TypedDict):
     """The lower humidity limit of the climate chamber"""
 
 
-class HeatersStatus(TypedDict):
+@dataclass
+class HeatersStatus:
     """
     The status of the heaters. All values are in percentage.
     """
@@ -81,7 +84,8 @@ class OperationMode(Enum):
         return self.value
 
 
-class TestAreaState(TypedDict):
+@dataclass
+class TestAreaState:
     """
     The state of the test area.
     """

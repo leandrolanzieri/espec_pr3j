@@ -5,7 +5,7 @@ import time
 
 import pyvisa
 
-from .dicts import (
+from .data_classes import (
     HeatersStatus,
     HumidityStatus,
     OperationMode,
@@ -22,11 +22,18 @@ class ClimateChamber:
     Implements the basic operation of the climate chamber.
 
     Args:
-        `ip_address (str)`: IP address of the climate chamber.
+        `ip_address (str | None)`: IP address of the climate chamber. Default is None.
+            If None, the resource_path must be provided. Can't be used with
+            resource_path.
         `temperature_accurary (float)`: The accuracy considered when setting the
-                                        temperature. Default is 0.2.
+            temperature. Default is 0.2.
         `humidity_accuracy (float)`: The accuracy considered when setting the humidity.
-                                     Default is 1.0.
+            Default is 1.0.
+        `resource_path (str | None)`: The resource path of the climate chamber. Default
+            is None. If None, the ip_address must be provided. Can't be used with
+            ip_address.
+        `resource_namager (pyvisa.ResourceManager | None)`: An optional PyVISA resource
+            manager. If None, the default one is used
     """
 
     MONITOR_COMMAND_DELAY = 0.2
@@ -41,8 +48,16 @@ class ClimateChamber:
     """The TCP port of the climate chamber"""
 
     def __init__(
-        self, ip_address: str, temperature_accurary=0.2, humidity_accuracy=1.0
+        self,
+        ip_address: str | None = None,
+        temperature_accurary=0.2,
+        humidity_accuracy=1.0,
+        resource_path: str | None = None,
+        resource_manager: pyvisa.ResourceManager = None,
     ):
+        assert (ip_address is None) or (resource_path is None)
+        assert (ip_address is not None) or (resource_path is not None)
+
         self.ip_address = ip_address
         """The IP address of the climate chamber"""
 
@@ -53,12 +68,17 @@ class ClimateChamber:
         """The accuracy considered when setting the humidity"""
 
         # we try to connect to the climate chamber just to see if there is an error
-        self._resource_manager = pyvisa.ResourceManager()
+        self._resource_manager = resource_manager or pyvisa.ResourceManager()
 
-        self._chamber = self._resource_manager.open_resource(
-            f"TCPIP0::{self.ip_address}::{self.TCP_PORT}::SOCKET"  # noqa E231
-        )
-        _LOGGER.debug(f"Connected to the climate chamber at {self.ip_address}")
+        if resource_path is None:
+            resource_path = f"TCPIP0::{self.ip_address}"  # noqa E231
+            resource_path += f"::{self.TCP_PORT}::SOCKET"  # noqa E231
+
+        self.resource_path = resource_path
+        """Resource path of the climate chamber"""
+
+        self._chamber = self._resource_manager.open_resource(self.resource_path)
+        _LOGGER.debug(f"Connected to the climate chamber at {self.resource_path}")
 
         self._chamber.write_termination = "\r\n"
         self._chamber.read_termination = "\r\n"
@@ -69,8 +89,8 @@ class ClimateChamber:
         Checks if the current temperature is within the target temperature range.
         """
         temperature_status = self.get_temperature_status()
-        current = temperature_status["current_temperature"]
-        target = temperature_status["target_temperature"]
+        current = temperature_status.current_temperature
+        target = temperature_status.target_temperature
 
         _LOGGER.debug(
             f"Current temperature: {current}°C, Target temperature: {target} +-"
@@ -87,8 +107,8 @@ class ClimateChamber:
         Checks if the current humidity is within the target humidity range.
         """
         humidity_status = self.get_humidity_status()
-        current = humidity_status["current_humidity"]
-        target = humidity_status["target_humidity"]
+        current = humidity_status.current_humidity
+        target = humidity_status.target_humidity
 
         _LOGGER.debug(
             f"Current humidity: {current}%, Target humidity: {target} +-"
@@ -191,7 +211,7 @@ class ClimateChamber:
         Closes the connection to the climate chamber.
         """
         _LOGGER.debug("Closing the connection to the climate chamber")
-        self._resource_manager.close()
+        self._chamber.close()
 
     def get_test_area_state(self) -> TestAreaState:
         """
@@ -221,12 +241,12 @@ class ClimateChamber:
             `ClimateChamberSettingError`: If an error occurred when setting the
                                           temperature limits.
         """
-        response = self._chamber.query("TEMP, H" + str(upper_limit))
+        response = self._chamber.query(f"TEMP, H{upper_limit: 0.1f}")
         response_pattern = re.compile(r"OK: TEMP, H\d+")
         if not response_pattern.match(response):
             raise SettingError("Failed to set the upper temperature limit")
 
-        response = self._chamber.query("TEMP, L" + str(lower_limit))
+        response = self._chamber.query(f"TEMP, L{lower_limit: 0.1f}")
         response_pattern = re.compile(r"OK: TEMP, L\d+")
         if not response_pattern.match(response):
             raise SettingError("Failed to set the lower temperature limit")
