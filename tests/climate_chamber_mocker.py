@@ -6,6 +6,9 @@ class ClimateChamberMocker(BaseMocker):
     A mocker for a climate chamber.
     """
 
+    LINE_TERMINATION = "\r\n"
+    """The line termination character for the mocker."""
+
     def __init__(
         self,
         call_delay: float = 0.0,
@@ -41,7 +44,7 @@ class ClimateChamberMocker(BaseMocker):
         for step in range(self._temperature_num_steps + 1):
             self._temperature_steps.append(current + step * step_size)
 
-        return f"OK: TEMP, S{temperature}\r\n"
+        return f"OK: TEMP, S{temperature}{self.LINE_TERMINATION}"
 
     @property
     def _current_temperature(self) -> float:
@@ -54,19 +57,20 @@ class ClimateChamberMocker(BaseMocker):
     @scpi("TEMP, H<temperature>")
     def _set_upper_temperature(self, temperature: float) -> str:
         self._upper_temperature = temperature
-        return f"OK: TEMP, H{temperature}\r\n"
+        return f"OK: TEMP, H{temperature}{self.LINE_TERMINATION}"
 
     @scpi("TEMP, L<temperature>")
     def _set_lower_temperature(self, temperature: float) -> str:
         self._lower_temperature = temperature
-        return f"OK: TEMP, L{temperature}\r\n"
+        return f"OK: TEMP, L{temperature}{self.LINE_TERMINATION}"
 
     @scpi("TEMP?")
     def _get_temperature_status(self) -> str:
-        response = f"{self._current_temperature: .1f}"
-        response += f", {self._target_temperature: .1f}"
-        response += f", {self._upper_temperature: .1f}"
-        response += f", {self._lower_temperature: .1f}"
+        response = f"{self._current_temperature:.1f}"  # noqa E231
+        response += f", {self._target_temperature:.1f}"  # noqa E231
+        response += f", {self._upper_temperature:.1f}"  # noqa E231
+        response += f", {self._lower_temperature:.1f}"  # noqa E231
+        response += f"{self.LINE_TERMINATION}"
 
         return response
 
@@ -84,7 +88,7 @@ class ClimateChamberMocker(BaseMocker):
         for step in range(self._humidity_num_steps + 1):
             self._humidity_steps.append(current + step * step_size)
 
-        return f"OK: HUMI, S{humidity}\r\n"
+        return f"OK: HUMI, S{humidity}{self.LINE_TERMINATION}"
 
     @property
     def _current_humidity(self) -> float:
@@ -103,24 +107,25 @@ class ClimateChamberMocker(BaseMocker):
     @scpi("HUMI, L<humidity>")
     def _set_lower_humidity(self, humidity: float) -> str:
         self._lower_humidity = humidity
-        return f"OK: HUMI, L{humidity}\r\n"
+        return f"OK: HUMI, L{humidity}{self.LINE_TERMINATION}"
 
     @scpi("HUMI?")
     def _get_humidity_status(self) -> str:
-        response = f"{self._current_humidity: .1f}"
-        response += f", {self._target_humidity: .1f}"
-        response += f", {self._upper_humidity: .1f}"
-        response += f", {self._lower_humidity: .1f}"
+        response = f"{self._current_humidity:.1f}"  # noqa E231
+        response += f", {self._target_humidity:.1f}"  # noqa E231
+        response += f", {self._upper_humidity:.1f}"  # noqa E231
+        response += f", {self._lower_humidity:.1f}"  # noqa E231
+        response += f"{self.LINE_TERMINATION}"
 
         return response
 
     @scpi("MODE, <mode>")
     def _set_mode(self, mode: str) -> str:
         if mode not in ["STANDBY", "OFF", "CONSTANT", "RUN"]:
-            return "NA:DATA NOT READY\r\n"
+            return f"NA:DATA NOT READY{self.LINE_TERMINATION}"  # noqa E231
 
         self._mode = mode
-        return f"OK: MODE, {mode}\r\n"
+        return f"OK: MODE, {mode}{self.LINE_TERMINATION}"
 
     @scpi("MODE?")
     def _get_mode(self) -> str:
@@ -128,9 +133,10 @@ class ClimateChamberMocker(BaseMocker):
 
     @scpi("MON?")
     def _get_monitor(self) -> str:
-        response = f"{self._current_temperature: .1f}"
-        response += f", {self._current_humidity: .1f}"
+        response = f"{self._current_temperature:.1f}"  # noqa E231
+        response += f", {self._current_humidity:.1f}"  # noqa E231
         response += f", {self._mode}"
         response += ", 0"  # number of alarms occurring
+        response += f"{self.LINE_TERMINATION}"
 
         return response
