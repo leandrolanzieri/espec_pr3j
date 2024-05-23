@@ -12,7 +12,7 @@ from .data_classes import (
     TemperatureStatus,
     TestAreaState,
 )
-from .exceptions import SettingError
+from .exceptions import MonitorError, SettingError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +34,8 @@ class ClimateChamber:
             ip_address.
         `resource_namager (pyvisa.ResourceManager | None)`: An optional PyVISA resource
             manager. If None, the default one is used
+        `communication_timeout (int)`: The communication timeout in milliseconds.
+            Default is 5000.
     """
 
     MONITOR_COMMAND_DELAY = 0.2
@@ -43,6 +45,9 @@ class ClimateChamber:
     SETTING_COMMAND_DELAY = 0.5
     """Delay in seconds when sending a setting command to the climate chamber
        (program-related delay is 1)"""
+
+    LINE_TERMINATION = "\r\n"
+    """The line termination character used by the climate chamber"""
 
     TCP_PORT = 57732
     """The TCP port of the climate chamber"""
@@ -54,6 +59,7 @@ class ClimateChamber:
         humidity_accuracy=1.0,
         resource_path: str | None = None,
         resource_manager: pyvisa.ResourceManager = None,
+        communication_timeout=5000,
     ):
         assert (ip_address is None) or (resource_path is None)
         assert (ip_address is not None) or (resource_path is not None)
@@ -80,9 +86,9 @@ class ClimateChamber:
         self._chamber = self._resource_manager.open_resource(self.resource_path)
         _LOGGER.debug(f"Connected to the climate chamber at {self.resource_path}")
 
-        self._chamber.write_termination = "\r\n"
-        self._chamber.read_termination = "\r\n"
-        self._chamber.timeout = 5000
+        self._chamber.write_termination = self.LINE_TERMINATION
+        self._chamber.read_termination = self.LINE_TERMINATION
+        self._chamber.timeout = communication_timeout
 
     def _target_temperature_reached(self) -> bool:
         """
@@ -116,40 +122,72 @@ class ClimateChamber:
         """
         Gets the temperature status of the climate chamber. This includes the current
         temperature, set temperature, upper limit, and lower limit.
+
+        Raises:
+            `ClimateChamberMonitorError`: If an error occurred when getting the
+                temperature status.
         """
         # send the request to the chamber
         response = self._chamber.query("TEMP?", delay=self.MONITOR_COMMAND_DELAY)
 
-        # convert into float numbers
         # data format: [current temp, set temp, upper limit, lower limit]
-        temperature = [float(i.strip()) for i in response.split(sep=",")]
-
-        temperature_status = TemperatureStatus(
-            current_temperature=temperature[0],
-            target_temperature=temperature[1],
-            upper_limit=temperature[2],
-            lower_limit=temperature[3],
+        pattern = re.compile(
+            r"(?P<current>\d+\.\d+)"
+            r", (?P<target>\d+\.\d+)"
+            r", (?P<upper>\d+\.\d+)"
+            r", (?P<lower>\d+\.\d+)"
         )
+
+        match = pattern.match(response)
+        if match is None:
+            _LOGGER.error("Failed to get the temperature status")
+            _LOGGER.debug(f"Response: '{response}'")
+            raise MonitorError("Failed to get the temperature status")
+
+        # convert into float numbers
+        temperature_status = TemperatureStatus(
+            current_temperature=float(match["current"]),
+            target_temperature=float(match["target"]),
+            upper_limit=float(match["upper"]),
+            lower_limit=float(match["lower"]),
+        )
+
         return temperature_status
 
     def get_humidity_status(self) -> HumidityStatus:
         """
         Gets the humidity status of the climate chamber. This includes the current
         humidity, set humidity, upper limit, and lower limit.
+
+        Raises:
+            `ClimateChamberMonitorError`: If an error occurred when getting the humidity
+                status.
         """
         # send the request to the chamber
         response = self._chamber.query("HUMI?", delay=self.MONITOR_COMMAND_DELAY)
 
-        # convert into float numbers
-        # data format: [current hum, set hum, upper limit, lower limit]
-        humidity = [float(i.strip()) for i in response.split(sep=",")]
-
-        humidity_status = HumidityStatus(
-            current_humidity=humidity[0],
-            target_humidity=humidity[1],
-            upper_limit=humidity[2],
-            lower_limit=humidity[3],
+        # data format: [current humi, set humi, upper limit, lower limit]
+        pattern = re.compile(
+            r"(?P<current>\d+\.\d+)"
+            r", (?P<target>\d+\.\d+)"
+            r", (?P<upper>\d+\.\d+)"
+            r", (?P<lower>\d+\.\d+)"
         )
+
+        match = pattern.match(response)
+        if match is None:
+            _LOGGER.error("Failed to get the temperature status")
+            _LOGGER.debug(f"Response: '{response}'")
+            raise MonitorError("Failed to get the humidity status")
+
+        # convert into float numbers
+        humidity_status = HumidityStatus(
+            current_humidity=float(match["current"]),
+            target_humidity=float(match["target"]),
+            upper_limit=float(match["upper"]),
+            lower_limit=float(match["lower"]),
+        )
+
         return humidity_status
 
     def set_target_temperature(self, temperature: float):
@@ -161,7 +199,7 @@ class ClimateChamber:
 
         Raises:
             `ClimateChamberSettingError`: If an error occurred when setting the
-                                          target temperature.
+                target temperature.
         """
         # sets the temp of the chamber, temperature
         _LOGGER.debug(f"Setting target temperature to {temperature}°C")
@@ -184,7 +222,7 @@ class ClimateChamber:
 
         Raises:
             `ClimateChamberSettingError`: If an error occurred when setting the
-                                          target humidity.
+                target humidity.
         """
         # sets the humidity of the chamber, (float) humidity
         _LOGGER.debug(f"Setting target humidity to {humidity}%")
@@ -210,14 +248,23 @@ class ClimateChamber:
         Get the chamber test area state.
         """
         response: str = self._chamber.query("MON?", delay=self.MONITOR_COMMAND_DELAY)
-        state = response.split(sep=",")
 
         # output data format: [temp, humid, op-state, num. of alarms]
+        pattern = re.compile(
+            r"(?P<temp>\d+\.\d+), (?P<humid>\d+\.\d+), (?P<state>\w+), (?P<alarms>\d+)"
+        )
+
+        match = pattern.match(response)
+        if match is None:
+            _LOGGER.error("Failed to get the test area state")
+            _LOGGER.debug(f"Response: '{response}'")
+            raise MonitorError("Failed to get the test area state")
+
         test_area_state = TestAreaState(
-            current_temperature=float(state[0].strip()),
-            current_humidity=float(state[1].strip()),
-            operation_state=OperationMode.from_str(state[2].strip()),
-            number_of_alarms=int(state[3].strip()),
+            current_temperature=float(match["temp"]),
+            current_humidity=float(match["humid"]),
+            operation_state=OperationMode.from_str(match["state"]),
+            number_of_alarms=int(match["alarms"]),
         )
         return test_area_state
 
@@ -231,14 +278,19 @@ class ClimateChamber:
 
         Raises:
             `ClimateChamberSettingError`: If an error occurred when setting the
-                                          temperature limits.
+                temperature limits.
         """
+        _LOGGER.debug(
+            f"Setting temperature limits to {upper_limit}°C and {lower_limit}°C"
+        )
         response = self._chamber.query(f"TEMP, H{upper_limit: 0.1f}")
+
         response_pattern = re.compile(r"OK: TEMP, H\d+")
         if not response_pattern.match(response):
             raise SettingError("Failed to set the upper temperature limit")
 
         response = self._chamber.query(f"TEMP, L{lower_limit: 0.1f}")
+
         response_pattern = re.compile(r"OK: TEMP, L\d+")
         if not response_pattern.match(response):
             raise SettingError("Failed to set the lower temperature limit")
@@ -253,17 +305,18 @@ class ClimateChamber:
 
         Raises:
             `ClimateChamberSettingError`: If an error occurred when setting the
-                                          humidity limits.
+                humidity limits.
         """
         _LOGGER.debug(f"Setting humidity limits to {upper_limit}% and {lower_limit}%")
         response = self._chamber.query("HUMI, H" + str(upper_limit))
+
         response_pattern = re.compile(r"OK: HUMI, H\d+")
         if not response_pattern.match(response):
             _LOGGER.error("Failed to set the upper humidity limit")
             raise SettingError("Failed to set the upper humidity limit")
 
-        _LOGGER.debug(f"Setting humidity limits to {upper_limit}% and {lower_limit}%")
         response = self._chamber.query("HUMI, L" + str(lower_limit))
+
         response_pattern = re.compile(r"OK: HUMI, L\d+")
         if not response_pattern.match(response):
             _LOGGER.error("Failed to set the lower humidity limit")
@@ -274,6 +327,14 @@ class ClimateChamber:
         Gets the operation mode of the climate chamber.
         """
         response = self._chamber.query("MODE?", delay=self.MONITOR_COMMAND_DELAY)
+        pattern = re.compile(r"(?P<mode>\w+)")
+        match = pattern.match(response)
+
+        if match is None:
+            _LOGGER.error("Failed to get the operation mode")
+            _LOGGER.debug(f"Response: '{response}'")
+            raise MonitorError("Failed to get the operation mode")
+
         return OperationMode.from_str(response)
 
     def set_mode(self, mode: OperationMode):
@@ -288,9 +349,22 @@ class ClimateChamber:
         response = self._chamber.query(
             f"MODE, {mode}", delay=self.SETTING_COMMAND_DELAY
         )
-        response_pattern = re.compile(r"OK: MODE, \w+")
-        if not response_pattern.match(response):
+
+        response_pattern = re.compile(r"OK: MODE, (?P<mode>\w+)\r\n")
+        match = response_pattern.match(response)
+        if match is None:
             _LOGGER.error("Failed to set the operation mode")
+            _LOGGER.debug(f"Response: '{response}'")
+            raise SettingError("Failed to set the operation mode")
+
+        set_mode = OperationMode.from_str(match["mode"])
+        if set_mode != mode:
+            _LOGGER.error(
+                f"Operation mode not set correctly"
+                f" (current: {match['mode']}, expected: {mode})"
+            )
+            _LOGGER.debug(f"Response: '{response}'")
+            _LOGGER.debug(f"Mode: '{match['mode']}'")
             raise SettingError("Failed to set the operation mode")
 
         return response
@@ -306,9 +380,9 @@ class ClimateChamber:
             `temperature`: The temperature to set in Celsius.
             `humidity`: The humidity to set in percentage.
             `stable_time`: The time in seconds to wait until the setpoints are stable.
-                           Default is 60.
+                Default is 60.
             `poll_interval`: The time in seconds to wait between each check.
-                             Default is 1.
+                Default is 1.
         """
         _LOGGER.debug(f"Setting constant condition {temperature}°C, {humidity}%")
 
@@ -339,7 +413,14 @@ class ClimateChamber:
         Gets the output of the heaters
         """
         response = self._chamber.query("%?", delay=self.MONITOR_COMMAND_DELAY)
-        response = response.split(sep=",")
+
+        pattern = re.compile(r"(\d+\.\d+), (\d+\.\d+)")
+        match = pattern.match(response)
+
+        if match is None:
+            _LOGGER.error("Failed to get the heaters status")
+            _LOGGER.debug(f"Response: '{response}'")
+            raise MonitorError("Failed to get the heaters status")
 
         heaters = HeatersStatus(
             temperature_heater=float(response[1].strip()),
