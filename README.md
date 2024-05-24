@@ -28,5 +28,5 @@ chamber.set_constant_condition(
 
 ## Feel like contributing?
 
-Please check [CONTRIBUTING.md], where you'll find how to set up your environment
+Please check [our contribution guidelines](CONTRIBUTING.md), where you'll find how to set up your environment
 and share your changes.
