@@ -3,3 +3,5 @@
 *.egg-info
 .tox
 .mypy_cache
+*_build
+docs/api
