@@ -24,3 +24,10 @@ static_tests:
 unit_tests:
   script:
     - tox
+
+pages:
+  script:
+    - tox -e docs
+  artifacts:
+    paths:
+      - docs/_build/html
