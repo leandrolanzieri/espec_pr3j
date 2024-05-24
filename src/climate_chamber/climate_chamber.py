@@ -22,16 +22,16 @@ class ClimateChamber:
     Implements the basic operation of the climate chamber.
 
     Args:
-        `ip_address (str | None)`: IP address of the climate chamber. Default is None.
+        `hostname (str | None)`: Host name of the climate chamber. Default is None.
             If None, the resource_path must be provided. Can't be used with
-            resource_path.
+            resource_path. It can be an IP address.
         `temperature_accuracy (float)`: The accuracy considered when setting the
             temperature. Default is 0.2.
         `humidity_accuracy (float)`: The accuracy considered when setting the humidity.
             Default is 1.0.
         `resource_path (str | None)`: The resource path of the climate chamber. Default
-            is None. If None, the ip_address must be provided. Can't be used with
-            ip_address.
+            is None. If None, the hostname must be provided. Can't be used with
+            hostname.
         `resource_namager (pyvisa.ResourceManager | None)`: An optional PyVISA resource
             manager. If None, the default one is used
         `communication_timeout (int)`: The communication timeout in milliseconds.
@@ -54,17 +54,17 @@ class ClimateChamber:
 
     def __init__(
         self,
-        ip_address: str | None = None,
+        hostname: str | None = None,
         temperature_accuracy=0.2,
         humidity_accuracy=1.0,
         resource_path: str | None = None,
         resource_manager: pyvisa.ResourceManager = None,
         communication_timeout=5000,
     ):
-        assert (ip_address is None) or (resource_path is None)
-        assert (ip_address is not None) or (resource_path is not None)
+        assert (hostname is None) or (resource_path is None)
+        assert (hostname is not None) or (resource_path is not None)
 
-        self.ip_address = ip_address
+        self.hostname = hostname
         """The IP address of the climate chamber"""
 
         self.temperature_accuracy = temperature_accuracy
@@ -77,7 +77,7 @@ class ClimateChamber:
         self._resource_manager = resource_manager or pyvisa.ResourceManager()
 
         if resource_path is None:
-            resource_path = f"TCPIP0::{self.ip_address}"  # noqa E231
+            resource_path = f"TCPIP0::{self.hostname}"  # noqa E231
             resource_path += f"::{self.TCP_PORT}::SOCKET"  # noqa E231
 
         self.resource_path = resource_path
