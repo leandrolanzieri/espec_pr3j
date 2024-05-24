@@ -414,7 +414,7 @@ class ClimateChamber:
         """
         response = self._chamber.query("%?", delay=self.MONITOR_COMMAND_DELAY)
 
-        pattern = re.compile(r"(\d+\.\d+), (\d+\.\d+)")
+        pattern = re.compile(r"(?P<temp>\d+\.\d+), (?P<humid>\d+\.\d+)")
         match = pattern.match(response)
 
         if match is None:
@@ -423,8 +423,8 @@ class ClimateChamber:
             raise MonitorError("Failed to get the heaters status")
 
         heaters = HeatersStatus(
-            temperature_heater=float(response[1].strip()),
-            humidity_heater=float(response[2].strip()),
+            temperature_heater=float(match["temp"]),
+            humidity_heater=float(match["humid"]),
         )
 
         return heaters

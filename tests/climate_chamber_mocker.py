@@ -1,3 +1,5 @@
+import random
+
 from pyvisa_mock.base.base_mocker import BaseMocker, scpi
 
 
@@ -138,5 +140,14 @@ class ClimateChamberMocker(BaseMocker):
         response += f", {self._mode}"
         response += ", 0"  # number of alarms occurring
         response += f"{self.LINE_TERMINATION}"
+
+        return response
+
+    @scpi("%?")
+    def _get_heaters(self) -> str:
+        temperature_heater = random.random() * 100.0
+        humidity_heater = random.random() * 100.0
+
+        response = f"{temperature_heater}, {humidity_heater}{self.LINE_TERMINATION}"
 
         return response

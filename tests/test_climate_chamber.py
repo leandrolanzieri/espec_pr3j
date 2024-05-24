@@ -83,3 +83,11 @@ def test_test_area_state(climate_chamber: ClimateChamber):
     )
 
     assert test_area.operation_state == OperationMode.CONSTANT
+
+
+def test_heaters(climate_chamber: ClimateChamber):
+    heaters_status = climate_chamber.get_heater_percentage()
+
+    assert heaters_status is not None
+    assert 0.0 <= heaters_status.humidity_heater <= 100.0
+    assert 0.0 <= heaters_status.temperature_heater <= 100.0
