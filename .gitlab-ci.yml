@@ -28,6 +28,7 @@ unit_tests:
 pages:
   script:
     - tox -e docs
+    - cp -r docs/_build/html public
   artifacts:
     paths:
-      - docs/_build/html
+      - public
