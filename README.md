@@ -26,7 +26,13 @@ chamber.set_constant_condition(
 )
 ```
 
+## Documentation
+
+For more details of the module API, check the [online documentation].
+
 ## Feel like contributing?
 
 Please check [our contribution guidelines](CONTRIBUTING.md), where you'll find how to set up your environment
 and share your changes.
+
+[online documentation]: https://climate-chamber-leandro-lanzieri-bcc388d1f7cfd484ca00bcced68d65.pages.desy.de/
