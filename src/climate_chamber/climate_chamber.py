@@ -2,6 +2,7 @@
 import logging
 import re
 import time
+from typing import Optional
 
 import pyvisa
 
@@ -22,20 +23,20 @@ class ClimateChamber:
     Implements the basic operation of the climate chamber.
 
     Args:
-        `hostname (str | None)`: Host name of the climate chamber. Default is None.
+        `hostname (Optional[str])`: Host name of the climate chamber. Default is None.
             If None, the resource_path must be provided. Can't be used with
             resource_path. It can be an IP address.
-        `temperature_accuracy (float)`: The accuracy considered when setting the
-            temperature. Default is 0.2.
-        `humidity_accuracy (float)`: The accuracy considered when setting the humidity.
-            Default is 1.0.
-        `resource_path (str | None)`: The resource path of the climate chamber. Default
-            is None. If None, the hostname must be provided. Can't be used with
-            hostname.
-        `resource_namager (pyvisa.ResourceManager | None)`: An optional PyVISA resource
-            manager. If None, the default one is used
-        `communication_timeout (int)`: The communication timeout in milliseconds.
-            Default is 5000.
+        `temperature_accuracy (Optional[float])`: The accuracy considered when setting
+            the temperature. Default is 0.2.
+        `humidity_accuracy (Optional[float])`: The accuracy considered when setting the
+            humidity. Default is 1.0.
+        `resource_path (Optional[str])`: The resource path of the climate chamber.
+            If None, the hostname must be provided. Can't be used with hostname. Default
+            is None.
+        `resource_namager (Optional[pyvisa.ResourceManager])`: An optional PyVISA
+            resource manager. If None, the default one is used. Default is None.
+        `communication_timeout (Optional[int])`: The communication timeout in
+            milliseconds. Default is 5000.
     """
 
     MONITOR_COMMAND_DELAY = 0.2
@@ -54,12 +55,12 @@ class ClimateChamber:
 
     def __init__(
         self,
-        hostname: str | None = None,
-        temperature_accuracy=0.2,
-        humidity_accuracy=1.0,
-        resource_path: str | None = None,
-        resource_manager: pyvisa.ResourceManager = None,
-        communication_timeout=5000,
+        hostname: Optional[str] = None,
+        temperature_accuracy: Optional[float] = None,
+        humidity_accuracy: Optional[float] = None,
+        resource_path: Optional[str] = None,
+        resource_manager: Optional[pyvisa.ResourceManager] = None,
+        communication_timeout: Optional[int] = None,
     ):
         assert (hostname is None) or (resource_path is None)
         assert (hostname is not None) or (resource_path is not None)
@@ -67,10 +68,10 @@ class ClimateChamber:
         self.hostname = hostname
         """The IP address of the climate chamber"""
 
-        self.temperature_accuracy = temperature_accuracy
+        self.temperature_accuracy = temperature_accuracy or 0.2
         """The accuracy considered when setting the temperature"""
 
-        self.humidity_accuracy = humidity_accuracy
+        self.humidity_accuracy = humidity_accuracy or 1.0
         """The accuracy considered when setting the humidity"""
 
         # we try to connect to the climate chamber just to see if there is an error
@@ -88,7 +89,7 @@ class ClimateChamber:
 
         self._chamber.write_termination = self.LINE_TERMINATION
         self._chamber.read_termination = self.LINE_TERMINATION
-        self._chamber.timeout = communication_timeout
+        self._chamber.timeout = communication_timeout or 5000
 
     def _target_temperature_reached(self) -> bool:
         """
