@@ -26,6 +26,16 @@ chamber.set_constant_condition(
 )
 ```
 
+## Running tests on hardware
+
+During normal development and for the CI the unit test suite is executed on a mock
+device using pyvisa-mock. It is also possible to run tests on real hardware connected
+to your system. Just set the `hil` flag when running `tox`, and pass the hostname:
+
+```bash
+$ tox -- --hil --hil_hostname mskclimate3
+```
+
 ## Documentation
 
 For more details of the module API, check the [online documentation].
