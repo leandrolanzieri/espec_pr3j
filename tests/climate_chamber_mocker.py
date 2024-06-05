@@ -1,4 +1,5 @@
 import random
+from typing import Optional
 
 from pyvisa_mock.base.base_mocker import BaseMocker, scpi
 
@@ -24,7 +25,7 @@ class ClimateChamberMocker(BaseMocker):
         self._temperature_steps: list[float] = [0.0]
         self._temperature_num_steps = temperature_steps
 
-        self._target_humidity = 0.0
+        self._target_humidity: Optional[float] = 0.0
         self._lower_humidity = 0.0
         self._upper_humidity = 0.0
         self._humidity_steps: list[float] = [0.0]
@@ -77,18 +78,21 @@ class ClimateChamberMocker(BaseMocker):
         return response
 
     @scpi("HUMI, S<humidity>")
-    def _set_target_humidity(self, humidity: float) -> str:
-        self._target_humidity = humidity
+    def _set_target_humidity(self, humidity: str) -> str:
+        if type(humidity) == str and humidity == "OFF":
+            self._target_humidity = None
+            return f"OK:HUMI, S{humidity}{self.LINE_TERMINATION}"  # noqa E231
+
+        self._target_humidity = float(humidity)
 
         # we want to simulate a linear humidity change
         # calculate the step size based on the number of steps and difference
-        current = self._current_humidity
-        step_jump = humidity - current
+        step_jump = self._target_humidity - self._current_humidity
         step_size = step_jump / self._humidity_num_steps
 
         self._humidity_steps = []
         for step in range(self._humidity_num_steps + 1):
-            self._humidity_steps.append(current + step * step_size)
+            self._humidity_steps.append(self._current_humidity + step * step_size)
 
         return f"OK:HUMI, S{humidity:.1f}{self.LINE_TERMINATION}"  # noqa E231
 
@@ -114,7 +118,12 @@ class ClimateChamberMocker(BaseMocker):
     @scpi("HUMI?")
     def _get_humidity_status(self) -> str:
         response = f"{self._current_humidity:.0f}"  # noqa E231
-        response += f",{self._target_humidity:.0f}"  # noqa E231
+
+        if self._target_humidity is None:
+            response += ",OFF"  # noqa E231
+        else:
+            response += f",{self._target_humidity:.0f}"  # noqa E231
+
         response += f",{self._upper_humidity:.0f}"  # noqa E231
         response += f",{self._lower_humidity:.0f}"  # noqa E231
         response += f"{self.LINE_TERMINATION}"

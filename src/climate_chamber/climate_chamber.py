@@ -107,11 +107,16 @@ class ClimateChamber:
 
     def _target_humidity_reached(self) -> bool:
         """
-        Checks if the current humidity is within the target humidity range.
+        Checks if the current humidity is within the target humidity range. If the
+        humidity control is disabled, it always returns True.
         """
         humidity_status = self.get_humidity_status()
         current = humidity_status.current_humidity
         target = humidity_status.target_humidity
+
+        if target is None:
+            _LOGGER.debug("Humidity control is disabled")
+            return True
 
         _LOGGER.debug(
             f"Current humidity: {current}%, Target humidity: {target} +-"
@@ -170,7 +175,7 @@ class ClimateChamber:
         # data format: [current humi, set humi, upper limit, lower limit]
         pattern = re.compile(
             r"(?P<current>\d+)"
-            r",(?P<target>\d+)"
+            r",(?P<target>OFF|\d+)"
             r",(?P<upper>\d+)"
             r",(?P<lower>\d+)"
         )
@@ -181,10 +186,15 @@ class ClimateChamber:
             _LOGGER.debug(f"Response: '{response}'")
             raise MonitorError("Failed to get the humidity status")
 
+        if match["target"] == "OFF":
+            target_humidity = None
+        else:
+            target_humidity = float(match["target"])
+
         # convert into float numbers
         humidity_status = HumidityStatus(
             current_humidity=float(match["current"]),
-            target_humidity=float(match["target"]),
+            target_humidity=target_humidity,
             upper_limit=float(match["upper"]),
             lower_limit=float(match["lower"]),
         )
@@ -215,25 +225,33 @@ class ClimateChamber:
             _LOGGER.debug(f"Response: '{response}'")
             raise SettingError("Failed to set the target temperature")
 
-    def set_target_humidity(self, humidity: float):
+    def set_target_humidity(self, humidity: Optional[float] = None):
         """
         Sets the target humidity of the climate chamber.
 
         Args:
-            `humidity`: The target humidity to set in percentage.
+            `humidity`: The target humidity to set in percentage. If None, the humidity
+                control is disabled.
 
         Raises:
             `ClimateChamberSettingError`: If an error occurred when setting the
                 target humidity.
         """
-        # sets the humidity of the chamber, (float) humidity
-        _LOGGER.debug(f"Setting target humidity to {humidity}%")
-        response = self._chamber.query(
-            "HUMI, S" + str(humidity), delay=self.SETTING_COMMAND_DELAY
-        )
+        if humidity is None:
+            _LOGGER.debug("Disabling humidity control")
+            response = self._chamber.query(
+                "HUMI, SOFF", delay=self.SETTING_COMMAND_DELAY
+            )
+            response_pattern = re.compile(r"OK:HUMI, SOFF")
+        else:
+            # sets the humidity of the chamber, (float) humidity
+            _LOGGER.debug(f"Setting target humidity to {humidity}%")
+            response = self._chamber.query(
+                f"HUMI, S{humidity}", delay=self.SETTING_COMMAND_DELAY
+            )
+            response_pattern = re.compile(r"OK:HUMI, S\d+.\d+")
 
         # verify the response
-        response_pattern = re.compile(r"OK:HUMI, S\d+.\d+")
         if not response_pattern.match(response):
             _LOGGER.error("Failed to set the target humidity")
             _LOGGER.debug(f"Response: '{response}'")
@@ -379,7 +397,11 @@ class ClimateChamber:
         return response
 
     def set_constant_condition(
-        self, temperature: float, humidity: float, stable_time=60.0, poll_interval=1.0
+        self,
+        temperature: float,
+        humidity: Optional[float] = None,
+        stable_time=60.0,
+        poll_interval=1.0,
     ):
         """
         Sets the climate chamber to a constant temperature and humidity condition and
@@ -387,7 +409,8 @@ class ClimateChamber:
 
         Args:
             `temperature`: The temperature to set in Celsius.
-            `humidity`: The humidity to set in percentage.
+            `humidity`: The humidity to set in percentage. Default is None (humidity
+                control is disabled)
             `stable_time`: The time in seconds to wait until the setpoints are stable.
                 Default is 60.
             `poll_interval`: The time in seconds to wait between each check.

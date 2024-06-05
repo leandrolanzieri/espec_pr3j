@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from typing import Optional
 
 
 @dataclass
@@ -30,8 +31,9 @@ class HumidityStatus:
     current_humidity: float
     """The current humidity of the climate chamber"""
 
-    target_humidity: float
-    """The target humidity of the climate chamber"""
+    target_humidity: Optional[float]
+    """The target humidity of the climate chamber. None if the humidity control is
+    disabled."""
 
     upper_limit: float
     """The upper humidity limit of the climate chamber"""

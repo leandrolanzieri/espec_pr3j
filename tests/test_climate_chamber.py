@@ -89,6 +89,37 @@ def test_constant_condition(
     )
 
 
+def test_no_humidity_control(climate_chamber: ClimateChamber):
+    climate_chamber.set_target_humidity(None)
+
+    humidity = climate_chamber.get_humidity_status()
+    assert humidity.target_humidity is None
+
+    climate_chamber.set_target_humidity(TARGET_HUMIDITY)
+    humidity = climate_chamber.get_humidity_status()
+    assert humidity.target_humidity == TARGET_HUMIDITY
+
+
+def test_no_humidity_control_in_constant_condition(
+    climate_chamber: ClimateChamber, STABILITY_TIME, STABILITY_POLL_INTERVAL
+):
+    climate_chamber.set_constant_condition(
+        temperature=TARGET_TEMPERATURE,
+        humidity=None,
+        stable_time=STABILITY_TIME,
+        poll_interval=STABILITY_POLL_INTERVAL,
+    )
+
+    temperature = climate_chamber.get_temperature_status()
+    humidity = climate_chamber.get_humidity_status()
+
+    assert (
+        abs(temperature.current_temperature - TARGET_TEMPERATURE)
+        < climate_chamber.temperature_accuracy
+    )
+    assert humidity.target_humidity is None
+
+
 def test_test_area_state(climate_chamber: ClimateChamber):
     test_area = climate_chamber.get_test_area_state()
 
