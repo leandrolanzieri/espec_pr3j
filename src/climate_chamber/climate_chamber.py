@@ -27,9 +27,9 @@ class ClimateChamber:
             If None, the resource_path must be provided. Can't be used with
             resource_path. It can be an IP address.
         `temperature_accuracy (Optional[float])`: The accuracy considered when setting
-            the temperature. Default is 0.2.
+            the temperature. Default is 0.5.
         `humidity_accuracy (Optional[float])`: The accuracy considered when setting the
-            humidity. Default is 1.0.
+            humidity. Default is 3.0.
         `resource_path (Optional[str])`: The resource path of the climate chamber.
             If None, the hostname must be provided. Can't be used with hostname. Default
             is None.
@@ -68,10 +68,10 @@ class ClimateChamber:
         self.hostname = hostname
         """The IP address of the climate chamber"""
 
-        self.temperature_accuracy = temperature_accuracy or 0.2
+        self.temperature_accuracy = temperature_accuracy or 0.5
         """The accuracy considered when setting the temperature"""
 
-        self.humidity_accuracy = humidity_accuracy or 1.0
+        self.humidity_accuracy = humidity_accuracy or 3.0
         """The accuracy considered when setting the humidity"""
 
         # we try to connect to the climate chamber just to see if there is an error
@@ -134,9 +134,9 @@ class ClimateChamber:
         # data format: [current temp, set temp, upper limit, lower limit]
         pattern = re.compile(
             r"(?P<current>\d+\.\d+)"
-            r", (?P<target>\d+\.\d+)"
-            r", (?P<upper>\d+\.\d+)"
-            r", (?P<lower>\d+\.\d+)"
+            r",(?P<target>\d+\.\d+)"
+            r",(?P<upper>\d+\.\d+)"
+            r",(?P<lower>\d+\.\d+)"
         )
 
         match = pattern.match(response)
@@ -169,10 +169,10 @@ class ClimateChamber:
 
         # data format: [current humi, set humi, upper limit, lower limit]
         pattern = re.compile(
-            r"(?P<current>\d+\.\d+)"
-            r", (?P<target>\d+\.\d+)"
-            r", (?P<upper>\d+\.\d+)"
-            r", (?P<lower>\d+\.\d+)"
+            r"(?P<current>\d+)"
+            r",(?P<target>\d+)"
+            r",(?P<upper>\d+)"
+            r",(?P<lower>\d+)"
         )
 
         match = pattern.match(response)
@@ -205,13 +205,14 @@ class ClimateChamber:
         # sets the temp of the chamber, temperature
         _LOGGER.debug(f"Setting target temperature to {temperature}°C")
         response = self._chamber.query(
-            f"TEMP, S{str(temperature)}", delay=self.SETTING_COMMAND_DELAY
+            f"TEMP, S{temperature:.1f}", delay=self.SETTING_COMMAND_DELAY  # noqa E231
         )
 
         # verify the response
-        response_pattern = re.compile(r"OK: TEMP, S\d+")
+        response_pattern = re.compile(r"OK:TEMP, S\d+.\d+")
         if not response_pattern.match(response):
             _LOGGER.error("Failed to set the target temperature")
+            _LOGGER.debug(f"Response: '{response}'")
             raise SettingError("Failed to set the target temperature")
 
     def set_target_humidity(self, humidity: float):
@@ -232,9 +233,10 @@ class ClimateChamber:
         )
 
         # verify the response
-        response_pattern = re.compile(r"OK: HUMI, S\d+")
+        response_pattern = re.compile(r"OK:HUMI, S\d+.\d+")
         if not response_pattern.match(response):
             _LOGGER.error("Failed to set the target humidity")
+            _LOGGER.debug(f"Response: '{response}'")
             raise SettingError("Failed to set the target humidity")
 
     def close(self):
@@ -252,7 +254,7 @@ class ClimateChamber:
 
         # output data format: [temp, humid, op-state, num. of alarms]
         pattern = re.compile(
-            r"(?P<temp>\d+\.\d+), (?P<humid>\d+\.\d+), (?P<state>\w+), (?P<alarms>\d+)"
+            r"(?P<temp>\d+\.\d+),(?P<humid>\d+),(?P<state>\w+),(?P<alarms>\d+)"
         )
 
         match = pattern.match(response)
@@ -286,14 +288,18 @@ class ClimateChamber:
         )
         response = self._chamber.query(f"TEMP, H{upper_limit: 0.1f}")
 
-        response_pattern = re.compile(r"OK: TEMP, H\d+")
+        response_pattern = re.compile(r"OK:TEMP, H \d+.\d+")
         if not response_pattern.match(response):
+            _LOGGER.error("Failed to set the upper temperature limit")
+            _LOGGER.debug(f"Response: '{response}'")
             raise SettingError("Failed to set the upper temperature limit")
 
         response = self._chamber.query(f"TEMP, L{lower_limit: 0.1f}")
 
-        response_pattern = re.compile(r"OK: TEMP, L\d+")
+        response_pattern = re.compile(r"OK:TEMP, L \d+.\d+")
         if not response_pattern.match(response):
+            _LOGGER.error("Failed to set the lower temperature limit")
+            _LOGGER.debug(f"Response: '{response}'")
             raise SettingError("Failed to set the lower temperature limit")
 
     def set_humidity_limits(self, upper_limit: float, lower_limit: float):
@@ -311,16 +317,18 @@ class ClimateChamber:
         _LOGGER.debug(f"Setting humidity limits to {upper_limit}% and {lower_limit}%")
         response = self._chamber.query("HUMI, H" + str(upper_limit))
 
-        response_pattern = re.compile(r"OK: HUMI, H\d+")
+        response_pattern = re.compile(r"OK:HUMI, H\d+")
         if not response_pattern.match(response):
             _LOGGER.error("Failed to set the upper humidity limit")
+            _LOGGER.debug(f"Response: '{response}'")
             raise SettingError("Failed to set the upper humidity limit")
 
         response = self._chamber.query("HUMI, L" + str(lower_limit))
 
-        response_pattern = re.compile(r"OK: HUMI, L\d+")
+        response_pattern = re.compile(r"OK:HUMI, L\d+")
         if not response_pattern.match(response):
             _LOGGER.error("Failed to set the lower humidity limit")
+            _LOGGER.debug(f"Response: '{response}'")
             raise SettingError("Failed to set the lower humidity limit")
 
     def get_mode(self) -> OperationMode:
@@ -351,7 +359,7 @@ class ClimateChamber:
             f"MODE, {mode}", delay=self.SETTING_COMMAND_DELAY
         )
 
-        response_pattern = re.compile(r"OK: MODE, (?P<mode>\w+)\r\n")
+        response_pattern = re.compile(r"OK:MODE, (?P<mode>\w+)")
         match = response_pattern.match(response)
         if match is None:
             _LOGGER.error("Failed to set the operation mode")
@@ -415,7 +423,7 @@ class ClimateChamber:
         """
         response = self._chamber.query("%?", delay=self.MONITOR_COMMAND_DELAY)
 
-        pattern = re.compile(r"(?P<temp>\d+\.\d+), (?P<humid>\d+\.\d+)")
+        pattern = re.compile(r"\d+,(?P<temp>\d+\.\d+),(?P<humid>\d+\.\d+)")
         match = pattern.match(response)
 
         if match is None:
