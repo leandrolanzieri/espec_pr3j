@@ -1,6 +1,6 @@
-# climate_chamber
+# espec_pr3j
 
-climate_chamber is a driver for the Espec PR-3J chamber.
+espec_pr3j is a driver for the Espec PR-3J chamber.
 It allows controlling the device via Ethernet, using a TCP/IP connection and the VISA
 protocol.
 

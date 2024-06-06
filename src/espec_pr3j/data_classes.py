@@ -6,40 +6,40 @@ from typing import Optional
 @dataclass
 class TemperatureStatus:
     """
-    The temperature status of the climate chamber. All values are in Celsius.
+    The temperature status of the environmental chamber. All values are in Celsius.
     """
 
     current_temperature: float
-    """The current temperature of the climate chamber"""
+    """The current temperature of the environmental chamber"""
 
     target_temperature: float
-    """The target temperature of the climate chamber"""
+    """The target temperature of the environmental chamber"""
 
     upper_limit: float
-    """The upper temperature limit of the climate chamber"""
+    """The upper temperature limit of the environmental chamber"""
 
     lower_limit: float
-    """The lower temperature limit of the climate chamber"""
+    """The lower temperature limit of the environmental chamber"""
 
 
 @dataclass
 class HumidityStatus:
     """
-    The humidity status of the climate chamber. All values are in percentage.
+    The humidity status of the environmental chamber. All values are in percentage.
     """
 
     current_humidity: float
-    """The current humidity of the climate chamber"""
+    """The current humidity of the environmental chamber"""
 
     target_humidity: Optional[float]
-    """The target humidity of the climate chamber. None if the humidity control is
+    """The target humidity of the environmental chamber. None if the humidity control is
     disabled."""
 
     upper_limit: float
-    """The upper humidity limit of the climate chamber"""
+    """The upper humidity limit of the environmental chamber"""
 
     lower_limit: float
-    """The lower humidity limit of the climate chamber"""
+    """The lower humidity limit of the environmental chamber"""
 
 
 @dataclass
@@ -57,7 +57,7 @@ class HeatersStatus:
 
 class OperationMode(Enum):
     """
-    The operation mode of the climate chamber.
+    The operation mode of the environmental chamber.
     """
 
     OFF = "OFF"

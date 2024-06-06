@@ -1,4 +1,3 @@
-from .climate_chamber import ClimateChamber
 from .data_classes import (
     HeatersStatus,
     HumidityStatus,
@@ -6,10 +5,11 @@ from .data_classes import (
     TemperatureStatus,
     TestAreaState,
 )
+from .espec_pr3j import EspecPr3j
 from .exceptions import SettingError
 
 __all__ = [
-    "ClimateChamber",
+    "EspecPr3j",
     "HumidityStatus",
     "TemperatureStatus",
     "SettingError",

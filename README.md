@@ -1,19 +1,19 @@
-# climate_chamber - Climate Chamber Controller
+# espec_pr3j - Remote controller for the Espec PR-3J Environmental Chamber
 
-This allows to interact with the climate chamber PR-3J from Espec.
+This allows to interact remotely with the environmental chamber PR-3J from Espec.
 
 ## Installation
 
 ```bash
-pip install git+https://gitlab.desy.de/leandro.lanzieri/climate_chamber.git
+pip install git+https://gitlab.desy.de/leandro.lanzieri/espec_pr3j.git
 ```
 
 ## Simple usage
 ```python
-from climate_chamber import ClimateChamber
+from espec_pr3j import EspecPr3j
 
-CLIMATE_CHAMBER_HOST = "mskclimate01"
-chamber = ClimateChamber(hostname=CLIMATE_CHAMBER_HOST)
+CHAMBER_HOST = "mskclimate3"
+chamber = EspecPr3j(hostname=CHAMBER_HOST)
 
 # set limits
 chamber.set_temperature_limits(upper_limit=28.0, lower_limit=23.0)

@@ -1,9 +1,9 @@
 import pytest
-from climate_chamber_mocker import ClimateChamberMocker
+from espec_pr3j_mocker import EspecPr3jMocker
 from pyvisa import ResourceManager
 from pyvisa_mock.base.register import register_resource
 
-from climate_chamber import ClimateChamber, OperationMode
+from espec_pr3j import EspecPr3j, OperationMode
 
 RESOURCE_PATH = "MOCK0::mock1::INSTR"
 
@@ -29,18 +29,18 @@ def hil_hostname(hil, request):
 
 
 @pytest.fixture(scope="module")
-def climate_chamber(hil, hil_hostname):
+def environmental_chamber(hil, hil_hostname):
     if hil:
-        chamber = ClimateChamber(
+        chamber = EspecPr3j(
             hostname=hil_hostname,
         )
     else:
-        mock_climate_chamber = ClimateChamberMocker()
-        register_resource(RESOURCE_PATH, mock_climate_chamber)
+        mock_environmental_chamber = EspecPr3jMocker()
+        register_resource(RESOURCE_PATH, mock_environmental_chamber)
 
         resource_manager = ResourceManager(visa_library="@mock")
 
-        chamber = ClimateChamber(
+        chamber = EspecPr3j(
             resource_path=RESOURCE_PATH, resource_manager=resource_manager
         )
 

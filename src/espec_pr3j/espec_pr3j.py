@@ -18,19 +18,19 @@ from .exceptions import MonitorError, SettingError
 _LOGGER = logging.getLogger(__name__)
 
 
-class ClimateChamber:
+class EspecPr3j:
     """
-    Implements the basic operation of the climate chamber.
+    Implements the basic operation of the environmental chamber.
 
     Args:
-        `hostname (Optional[str])`: Host name of the climate chamber. Default is None.
-            If None, the resource_path must be provided. Can't be used with
+        `hostname (Optional[str])`: Host name of the environmental chamber. Default is
+            None. If None, the resource_path must be provided. Can't be used with
             resource_path. It can be an IP address.
         `temperature_accuracy (Optional[float])`: The accuracy considered when setting
             the temperature. Default is 0.5.
         `humidity_accuracy (Optional[float])`: The accuracy considered when setting the
             humidity. Default is 3.0.
-        `resource_path (Optional[str])`: The resource path of the climate chamber.
+        `resource_path (Optional[str])`: The resource path of the environmental chamber.
             If None, the hostname must be provided. Can't be used with hostname. Default
             is None.
         `resource_namager (Optional[pyvisa.ResourceManager])`: An optional PyVISA
@@ -40,18 +40,18 @@ class ClimateChamber:
     """
 
     MONITOR_COMMAND_DELAY = 0.2
-    """Delay in seconds when sending a command to the climate chamber
+    """Delay in seconds when sending a command to the environmental chamber
        (program-related delay is 0.3)"""
 
     SETTING_COMMAND_DELAY = 0.5
-    """Delay in seconds when sending a setting command to the climate chamber
+    """Delay in seconds when sending a setting command to the environmental chamber
        (program-related delay is 1)"""
 
     LINE_TERMINATION = "\r\n"
-    """The line termination character used by the climate chamber"""
+    """The line termination character used by the environmental chamber"""
 
     TCP_PORT = 57732
-    """The TCP port of the climate chamber"""
+    """The TCP port of the environmental chamber"""
 
     def __init__(
         self,
@@ -66,7 +66,7 @@ class ClimateChamber:
         assert (hostname is not None) or (resource_path is not None)
 
         self.hostname = hostname
-        """The IP address of the climate chamber"""
+        """The IP address of the environmental chamber"""
 
         self.temperature_accuracy = temperature_accuracy or 0.5
         """The accuracy considered when setting the temperature"""
@@ -74,7 +74,8 @@ class ClimateChamber:
         self.humidity_accuracy = humidity_accuracy or 3.0
         """The accuracy considered when setting the humidity"""
 
-        # we try to connect to the climate chamber just to see if there is an error
+        # we try to connect to the environmental chamber just to see if there is an
+        # error
         self._resource_manager = resource_manager or pyvisa.ResourceManager()
 
         if resource_path is None:
@@ -82,10 +83,10 @@ class ClimateChamber:
             resource_path += f"::{self.TCP_PORT}::SOCKET"  # noqa E231
 
         self.resource_path = resource_path
-        """Resource path of the climate chamber"""
+        """Resource path of the environmental chamber"""
 
         self._chamber = self._resource_manager.open_resource(self.resource_path)
-        _LOGGER.debug(f"Connected to the climate chamber at {self.resource_path}")
+        _LOGGER.debug(f"Connected to the environmental chamber at {self.resource_path}")
 
         self._chamber.write_termination = self.LINE_TERMINATION
         self._chamber.read_termination = self.LINE_TERMINATION
@@ -126,12 +127,11 @@ class ClimateChamber:
 
     def get_temperature_status(self) -> TemperatureStatus:
         """
-        Gets the temperature status of the climate chamber. This includes the current
-        temperature, set temperature, upper limit, and lower limit.
+        Gets the temperature status of the environmental chamber. This includes the
+        current temperature, set temperature, upper limit, and lower limit.
 
         Raises:
-            `ClimateChamberMonitorError`: If an error occurred when getting the
-                temperature status.
+            `MonitorError`: If an error occurred when getting the temperature status.
         """
         # send the request to the chamber
         response = self._chamber.query("TEMP?", delay=self.MONITOR_COMMAND_DELAY)
@@ -162,12 +162,11 @@ class ClimateChamber:
 
     def get_humidity_status(self) -> HumidityStatus:
         """
-        Gets the humidity status of the climate chamber. This includes the current
+        Gets the humidity status of the environmental chamber. This includes the current
         humidity, set humidity, upper limit, and lower limit.
 
         Raises:
-            `ClimateChamberMonitorError`: If an error occurred when getting the humidity
-                status.
+            `MonitorError`: If an error occurred when getting the humidity status.
         """
         # send the request to the chamber
         response = self._chamber.query("HUMI?", delay=self.MONITOR_COMMAND_DELAY)
@@ -203,7 +202,7 @@ class ClimateChamber:
 
     def set_target_temperature(self, temperature: float):
         """
-        Sets the target temperature of the climate chamber.
+        Sets the target temperature of the environmental chamber.
 
         Args:
             `temperature`: The target temperature to set in Celsius.
@@ -227,7 +226,7 @@ class ClimateChamber:
 
     def set_target_humidity(self, humidity: Optional[float] = None):
         """
-        Sets the target humidity of the climate chamber.
+        Sets the target humidity of the environmental chamber.
 
         Args:
             `humidity`: The target humidity to set in percentage. If None, the humidity
@@ -259,9 +258,9 @@ class ClimateChamber:
 
     def close(self):
         """
-        Closes the connection to the climate chamber.
+        Closes the connection to the environmental chamber.
         """
-        _LOGGER.debug("Closing the connection to the climate chamber")
+        _LOGGER.debug("Closing the connection to the environmental chamber")
         self._chamber.close()
 
     def get_test_area_state(self) -> TestAreaState:
@@ -351,7 +350,7 @@ class ClimateChamber:
 
     def get_mode(self) -> OperationMode:
         """
-        Gets the operation mode of the climate chamber.
+        Gets the operation mode of the environmental chamber.
         """
         response = self._chamber.query("MODE?", delay=self.MONITOR_COMMAND_DELAY)
         pattern = re.compile(r"(?P<mode>\w+)")
@@ -366,7 +365,7 @@ class ClimateChamber:
 
     def set_mode(self, mode: OperationMode):
         """
-        Sets the operation mode of the climate chamber.
+        Sets the operation mode of the environmental chamber.
 
         Args:
             `mode`: The operation mode to set.
@@ -404,8 +403,8 @@ class ClimateChamber:
         poll_interval=1.0,
     ):
         """
-        Sets the climate chamber to a constant temperature and humidity condition and
-        waits until the setpoints are reached and stable.
+        Sets the environmental chamber to a constant temperature and humidity condition
+        and waits until the setpoints are reached and stable.
 
         Args:
             `temperature`: The temperature to set in Celsius.

@@ -4,13 +4,17 @@ from typing import Optional
 from pyvisa_mock.base.base_mocker import BaseMocker, scpi
 
 
-class ClimateChamberMocker(BaseMocker):
+class EspecPr3jMocker(BaseMocker):
     """
-    A mocker for a climate chamber.
+    A mocker for an Espec PR-3J environmental chamber.
     """
 
     LINE_TERMINATION = "\r\n"
     """The line termination character for the mocker."""
+
+    DEFAULT_HUMIDITY = 50.0
+    """The default humidity value for the mocker, used when the humidity control is
+    disabled."""
 
     def __init__(
         self,
@@ -87,17 +91,24 @@ class ClimateChamberMocker(BaseMocker):
 
         # we want to simulate a linear humidity change
         # calculate the step size based on the number of steps and difference
-        step_jump = self._target_humidity - self._current_humidity
+        current = self._current_humidity
+        step_jump = self._target_humidity - current
         step_size = step_jump / self._humidity_num_steps
 
         self._humidity_steps = []
         for step in range(self._humidity_num_steps + 1):
-            self._humidity_steps.append(self._current_humidity + step * step_size)
+            self._humidity_steps.append(current + step * step_size)
 
-        return f"OK:HUMI, S{humidity:.1f}{self.LINE_TERMINATION}"  # noqa E231
+        return (
+            f"OK:HUMI, S{self._target_humidity:.1f}"  # noqa E231
+            f"{self.LINE_TERMINATION}"
+        )
 
     @property
     def _current_humidity(self) -> float:
+        if self._target_humidity is None:
+            return self.DEFAULT_HUMIDITY
+
         # always return the last element of the list
         # pop it from the list, unless it is the last one
         if len(self._humidity_steps) > 1 and self._mode == "CONSTANT":

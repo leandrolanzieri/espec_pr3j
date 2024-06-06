@@ -34,7 +34,7 @@ except ImportError:
     from sphinx import apidoc
 
 output_dir = os.path.join(__location__, "api")
-module_dir = os.path.join(__location__, "../src/climate_chamber")
+module_dir = os.path.join(__location__, "../src/espec_pr3j")
 try:
     shutil.rmtree(output_dir)
 except FileNotFoundError:
@@ -105,7 +105,7 @@ source_suffix = [".rst", ".md"]
 master_doc = "index"
 
 # General information about the project.
-project = "climate_chamber"
+project = "espec_pr3j"
 copyright = "2024, Deutsches Elektronen-Synchrotron, DESY"
 
 # The version info for the project you're documenting, acts as replacement for
@@ -117,7 +117,7 @@ copyright = "2024, Deutsches Elektronen-Synchrotron, DESY"
 # If you don’t need the separation provided between version and release,
 # just set them both to the same value.
 try:
-    from climate_chamber import __version__ as version
+    from espec_pr3j import __version__ as version
 except ImportError:
     version = ""
 

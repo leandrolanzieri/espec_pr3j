@@ -1,5 +1,5 @@
 """
-    Setup file for climate_chamber
+    Setup file for espec_pr3j
     Use setup.cfg to configure your project.
 """
 from setuptools import setup

@@ -1,6 +1,6 @@
 # Contributing
 
-Welcome to `climate_chamber` contributor's guide.
+Welcome to `espec_pr3j` contributor's guide.
 
 This document focuses on getting any potential contributor familiarized with
 the development processes, but [other kinds of contributions] are also appreciated.
@@ -16,7 +16,7 @@ behavior guidelines.
 
 ## Issue Reports
 
-If you experience bugs or general issues with `climate_chamber`, please have a look
+If you experience bugs or general issues with `espec_pr3j`, please have a look
 on the [issue tracker].
 If you don't see anything useful there, please feel free to fire an issue report.
 
@@ -34,10 +34,10 @@ you help us to identify the root cause of the issue.
 
 ## Documentation Improvements
 
-You can help improve `climate_chamber` docs by making them more readable and coherent, or
+You can help improve `espec_pr3j` docs by making them more readable and coherent, or
 by adding missing information and correcting mistakes.
 
-`climate_chamber` documentation uses [Sphinx] as its main documentation compiler.
+`espec_pr3j` documentation uses [Sphinx] as its main documentation compiler.
 This means that the docs are kept in the same repository as the project code, and
 that any documentation update is done in the same way was a code contribution.
 
@@ -82,8 +82,8 @@ source <PATH TO VENV>/bin/activate
 1. Clone this repository to your local disk:
 
    ```
-   git clone git@gitlab.desy.de:leandro.lanzieri/climate_chamber.git
-   cd climate_chamber
+   git clone git@gitlab.desy.de:leandro.lanzieri/espec_pr3j.git
+   cd espec_pr3j
    ```
 
 2. You should run:
@@ -101,7 +101,7 @@ source <PATH TO VENV>/bin/activate
    pre-commit install
    ```
 
-   `climate_chamber` comes with a lot of hooks configured to automatically help the
+   `espec_pr3j` comes with a lot of hooks configured to automatically help the
    developer to check the code being written.
 
 ### Implement your changes
@@ -253,5 +253,5 @@ package:
 [tox]: https://tox.readthedocs.io/en/stable/
 [virtual environment]: https://realpython.com/python-virtual-environments-a-primer/
 [virtualenv]: https://virtualenv.pypa.io/en/stable/
-[repository]: https://gitlab.desy.de/leandro.lanzieri/climate_chamber
-[issue tracker]: https://gitlab.desy.de/leandro.lanzieri/climate_chamber/-/issues
+[repository]: https://gitlab.desy.de/leandro.lanzieri/espec_pr3j
+[issue tracker]: https://gitlab.desy.de/leandro.lanzieri/espec_pr3j/-/issues

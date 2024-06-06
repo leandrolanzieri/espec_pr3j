@@ -3,6 +3,6 @@
         88
     ],
     "python.analysis.extraPaths": [
-        "./src/climate_chamber"
+        "./src/espec_pr3j"
     ]
 }
