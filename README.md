@@ -5,7 +5,7 @@ This allows to interact remotely with the environmental chamber PR-3J from Espec
 ## Installation
 
 ```bash
-pip install git+https://gitlab.desy.de/leandro.lanzieri/espec_pr3j.git
+pip install espec_pr3j
 ```
 
 ## Simple usage
