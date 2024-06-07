@@ -5,7 +5,7 @@ This allows to interact remotely with the environmental chamber PR-3J from Espec
 ## Installation
 
 ```bash
-pip install espec_pr3j
+pip install espec-pr3j
 ```
 
 ## Simple usage
