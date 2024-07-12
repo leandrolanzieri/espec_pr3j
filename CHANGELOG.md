@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 0.0.3 (development)
+
+- fix parsing of the response when setting a target temperature
+
 ## Version 0.0.2 (development)
 
 - various communication fixes
