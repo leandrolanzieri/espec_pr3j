@@ -248,7 +248,7 @@ class EspecPr3j:
             response = self._chamber.query(
                 f"HUMI, S{humidity}", delay=self.SETTING_COMMAND_DELAY
             )
-            response_pattern = re.compile(r"OK:HUMI, S\d+.\d+")
+            response_pattern = re.compile(r"OK:HUMI, S\d+.*\d*")
 
         # verify the response
         if not response_pattern.match(response):
