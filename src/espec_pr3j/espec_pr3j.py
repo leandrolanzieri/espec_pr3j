@@ -214,7 +214,8 @@ class EspecPr3j:
         # sets the temp of the chamber, temperature
         _LOGGER.debug(f"Setting target temperature to {temperature}°C")
         response = self._chamber.query(
-            f"TEMP, S{temperature:.1f}", delay=self.SETTING_COMMAND_DELAY  # noqa E231
+            f"TEMP, S{temperature:.1f}",
+            delay=self.SETTING_COMMAND_DELAY,  # noqa E231
         )
 
         # verify the response
