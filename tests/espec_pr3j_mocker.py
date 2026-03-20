@@ -83,7 +83,7 @@ class EspecPr3jMocker(BaseMocker):
 
     @scpi("HUMI, S<humidity>")
     def _set_target_humidity(self, humidity: str) -> str:
-        if type(humidity) == str and humidity == "OFF":
+        if isinstance(humidity, str) and humidity == "OFF":
             self._target_humidity = None
             return f"OK:HUMI, S{humidity}{self.LINE_TERMINATION}"  # noqa E231
 
