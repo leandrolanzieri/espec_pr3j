@@ -1,3 +1,3 @@
 # Contributors
 
-* Leandro Lanzieri [leandro.lanzieri@desy.de](mailto:leandro.lanzieri@desy.de)
+* Leandro Lanzieri [leandro.lanzieri@tuhh.de](mailto:leandro.lanzieri@tuhh.de)

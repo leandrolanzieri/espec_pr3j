@@ -42,10 +42,10 @@ This means that the docs are kept in the same repository as the project code, an
 that any documentation update is done in the same way was a code contribution.
 
 When working on documentation changes in your local machine, you can
-compile them using [tox] :
+compile them using [uv] and [poethepoet]:
 
 ```
-tox -e docs
+uv run poe docs
 ```
 
 and use Python's built-in web server for a preview in your web browser
@@ -57,8 +57,7 @@ python3 -m http.server --directory 'docs/_build/html'
 
 ## Code Contributions
 
-Note that to open a merge (i.e., pull) request, you need to have at least a 'developer'
-role.
+Note that to open a pull request, you need a GitHub account and a fork of the repository.
 
 ### Submit an issue
 
@@ -68,40 +67,38 @@ This often provides additional considerations and avoids unnecessary work.
 
 ### Create an environment
 
-Before you start coding, we recommend creating an isolated [virtual environment]
-to avoid any problems with your installed Python packages.
-This can easily be done via [virtualenv]:
+Before you start coding, install [uv] if you haven't already:
 
 ```
-virtualenv <PATH TO VENV>
-source <PATH TO VENV>/bin/activate
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
+
+[uv] manages the virtual environment and all dependencies automatically.
 
 ### Clone the repository
 
 1. Clone this repository to your local disk:
 
    ```
-   git clone git@gitlab.desy.de:leandro.lanzieri/espec_pr3j.git
+   git clone git@github.com:leandrolanzieri/espec_pr3j.git
    cd espec_pr3j
    ```
 
-2. You should run:
+2. Install all dependencies (including dev tools) with [uv]:
 
    ```
-   pip install -U pip setuptools -e .[testing]
+   uv sync
    ```
 
-   to be able to import the package under development in the Python REPL.
+   This creates a virtual environment and installs the package in editable mode.
 
-3. Install [pre-commit]:
+3. Install [pre-commit] hooks:
 
    ```
-   pip install pre-commit
-   pre-commit install
+   uv run pre-commit install
    ```
 
-   `espec_pr3j` comes with a lot of hooks configured to automatically help the
+   `espec_pr3j` comes with hooks configured to automatically help the
    developer to check the code being written.
 
 ### Implement your changes
@@ -130,7 +127,7 @@ source <PATH TO VENV>/bin/activate
 
    Please make sure to see the validation messages from [pre-commit] and fix
    any eventual issues.
-   This should automatically use [flake8]/[black] to check/fix the code style
+   This should automatically use [ruff] to check/fix the code style
    in a way that is compatible with the project.
 
    :::{important}
@@ -150,13 +147,14 @@ source <PATH TO VENV>/bin/activate
 5. Please check that your changes don't break any unit tests with:
 
    ```
-   tox
+   uv run poe test
    ```
 
-   (after having installed [tox] with `pip install tox` or `pipx`).
+   You can also run the linter and pre-commit checks with:
 
-   You can also use [tox] to run several other pre-configured tasks in the
-   repository. Try `tox -av` to see a list of the available checks.
+   ```
+   uv run poe pre_commit
+   ```
 
 ### Submit your contribution
 
@@ -166,10 +164,10 @@ source <PATH TO VENV>/bin/activate
    git push -u origin my-feature
    ```
 
-2. Go to the web page of your fork and click "Create merge request"
+2. Go to the web page of your fork on GitHub and click "Compare & pull request"
    to send your changes for review.
-   Find more detailed information in [creating a merge request]. You might also want to open
-   the merge request as a draft first and mark it as ready for review after the feedbacks
+   Find more detailed information in [creating a pull request]. You might also want to open
+   the pull request as a draft first and mark it as ready for review after the feedbacks
    from the continuous integration (CI) system or any required fixes.
 
 
@@ -182,48 +180,17 @@ package:
    The command `git describe --abbrev=0 --tags` should return the version you
    are expecting. If you are trying to run CI scripts in a fork repository,
    make sure to push all the tags.
-   You can also try to remove all the egg files or the complete egg folder, i.e.,
-   `.eggs`, as well as the `*.egg-info` folders in the `src` folder or
-   potentially in the root of your project.
 
-2. Sometimes [tox] misses out when new dependencies are added, especially to
-   `setup.cfg` and `docs/requirements.txt`. If you find any problems with
-   missing dependencies when running a command with [tox], try to recreate the
-   `tox` environment using the `-r` flag. For example, instead of:
+2. If dependencies are out of sync after pulling new changes, refresh the
+   environment with:
 
    ```
-   tox -e docs
+   uv sync
    ```
 
-   Try running:
-
-   ```
-   tox -r -e docs
-   ```
-
-3. Make sure to have a reliable [tox] installation that uses the correct
-   Python version (e.g., 3.7+). When in doubt you can run:
-
-   ```
-   tox --version
-   # OR
-   which tox
-   ```
-
-   If you have trouble and are seeing weird errors upon running [tox], you can
-   also try to create a dedicated [virtual environment] with a [tox] binary
-   freshly installed. For example:
-
-   ```
-   virtualenv .venv
-   source .venv/bin/activate
-   .venv/bin/pip install tox
-   .venv/bin/tox -e all
-   ```
-
-4. [Pytest can drop you] in an interactive session in the case an error occurs.
+3. [Pytest can drop you] in an interactive session in the case an error occurs.
    In order to do that you need to pass a `--pdb` option (for example by
-   running `tox -- -k <NAME OF THE FALLING TEST> --pdb`).
+   running `uv run pytest -k <NAME OF THE FAILING TEST> --pdb`).
    You can also setup breakpoints manually instead of using the `--pdb` option.
 
 [^contrib1]: Even though, these resources focus on open source projects and
@@ -232,26 +199,22 @@ package:
     of environments, including private companies and proprietary code bases.
 
 
-[black]: https://pypi.org/project/black/
 [commonmark]: https://commonmark.org/
 [contribution-guide.org]: http://www.contribution-guide.org/
-[creating a merge request]: https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html
+[creating a pull request]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request
 [descriptive commit message]: https://chris.beams.io/posts/git-commit
 [docstrings]: https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
-[flake8]: https://flake8.pycqa.org/en/stable/
 [git]: https://git-scm.com
 [guide created by freecodecamp]: https://github.com/freecodecamp/how-to-contribute-to-open-source
-[miniconda]: https://docs.conda.io/en/latest/miniconda.html
 [other kinds of contributions]: https://opensource.guide/how-to-contribute
+[poethepoet]: https://poethepoet.natn.io/
 [pre-commit]: https://pre-commit.com/
 [pypi]: https://pypi.org/
-[pyscaffold's contributor's guide]: https://pyscaffold.org/en/stable/contributing.html
 [pytest can drop you]: https://docs.pytest.org/en/stable/usage.html#dropping-to-pdb-python-debugger-at-the-start-of-a-test
 [python software foundation's code of conduct]: https://www.python.org/psf/conduct/
 [restructuredtext]: https://www.sphinx-doc.org/en/master/usage/restructuredtext/
+[ruff]: https://docs.astral.sh/ruff/
 [sphinx]: https://www.sphinx-doc.org/en/master/
-[tox]: https://tox.readthedocs.io/en/stable/
-[virtual environment]: https://realpython.com/python-virtual-environments-a-primer/
-[virtualenv]: https://virtualenv.pypa.io/en/stable/
-[repository]: https://gitlab.desy.de/leandro.lanzieri/espec_pr3j
-[issue tracker]: https://gitlab.desy.de/leandro.lanzieri/espec_pr3j/-/issues
+[uv]: https://docs.astral.sh/uv/
+[repository]: https://github.com/leandrolanzieri/espec_pr3j
+[issue tracker]: https://github.com/leandrolanzieri/espec_pr3j/issues

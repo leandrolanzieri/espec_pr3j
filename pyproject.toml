@@ -1,9 +1,63 @@
-[build-system]
-# AVOID CHANGING REQUIRES: IT WILL BE UPDATED BY PYSCAFFOLD!
-requires = ["setuptools>=46.1.0", "setuptools_scm[toml]>=5"]
-build-backend = "setuptools.build_meta"
+[project]
+name = "espec-pr3j"
+description = "Espec PR-3J environmental chamber remote controller"
+authors = [{ name = "Leandro Lanzieri", email = "leandro.lanzieri@desy.de" }]
+license = "MIT"
+license-files = ["COPYING.LESSER"]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "pyvisa",
+    "pyvisa-py",
+]
+dynamic = ["version"]
+classifiers = ["Development Status :: 4 - Beta", "Programming Language :: Python"]
 
-[tool.setuptools_scm]
-# For smarter version schemes and other configuration options,
-# check out https://github.com/pypa/setuptools_scm
-version_scheme = "no-guess-dev"
+[project.urls]
+Source = "https://github.com/leandrolanzieri/espec_pr3j"
+Documentation = "https://leandrolanzieri.github.io/espec_pr3j"
+
+
+[build-system]
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[tool.uv-dynamic-versioning]
+vcs = "git"
+style = "pep440"
+bump = false
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/espec_pr3j"]
+
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pyvisa_mock@git+https://github.com/leandrolanzieri/pyvisa-mock.git@fixes",
+    "poethepoet>=0.30.0",
+    "pre-commit>=3.4.0",
+    "myst-parser[linkify]",
+    "sphinx>=3.2.1",
+    "sphinx-rtd-theme",
+]
+
+
+[tool.pytest.ini_options]
+addopts = "--cov espec_pr3j --cov-report term-missing --verbose"
+log_cli = true
+norecursedirs = ["dist", "build"]
+testpaths = ["tests"]
+
+[tool.poe.tasks]
+test = "pytest tests"
+pre_commit = "pre-commit run --all-files --show-diff-on-failure"
+docs = "sphinx-build --color -b html -d docs/_build/doctrees docs docs/_build/html"
+
+[tool.ruff]
+line-length = 88
+lint.select = ["E", "F", "I"]
