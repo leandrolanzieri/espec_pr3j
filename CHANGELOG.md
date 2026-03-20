@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 0.4.0
+
+- Add py.typed
+
 ## Version 0.3.0 (development)
 
 - fix parsing of the response when setting a target temperature
