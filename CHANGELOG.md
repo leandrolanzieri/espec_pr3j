@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 0.5.0
+
+- Migrate from GitLab to GitHub
+- Migrate from tox/setuptools to uv/hatchling
+- Drop Python 3.8 and 3.9 support; require Python 3.10+
+- Replace flake8/black/isort with ruff in pre-commit hooks
+
 ## Version 0.4.0
 
 - Add py.typed
